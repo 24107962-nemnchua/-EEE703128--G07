@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G07 — Bộ phát hiện đỉnh có suy giảm · Ghi chú thực hiện</title>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1a1d21; --muted:#5c6570; --line:#e3e7eb;
+  --accent:#1f5fa9; --accent-soft:#eef4fb; --code-bg:#f5f7f9;
+  --ok:#137a4d; --ok-bg:#e8f6ee; --warn:#8a5a00; --warn-bg:#fdf4e2;
+  --bad:#a52020; --bad-bg:#fceded; --open:#7a5ba8; --open-bg:#f3eefa;
+  --maxw:960px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --fg:#e6e9ec; --muted:#98a2ad; --line:#2a2f36;
+    --accent:#6fa8e0; --accent-soft:#1c2733; --code-bg:#1b1f24;
+    --ok:#5cc08d; --ok-bg:#16291f; --warn:#d8a54a; --warn-bg:#2a2314;
+    --bad:#e88b8b; --bad-bg:#2b1a1a; --open:#b79ad6; --open-bg:#241d2e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --fg:#e6e9ec; --muted:#98a2ad; --line:#2a2f36;
+  --accent:#6fa8e0; --accent-soft:#1c2733; --code-bg:#1b1f24;
+  --ok:#5cc08d; --ok-bg:#16291f; --warn:#d8a54a; --warn-bg:#2a2314;
+  --bad:#e88b8b; --bad-bg:#2b1a1a; --open:#b79ad6; --open-bg:#241d2e;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 16px 96px}
+header.doc{
+  border-bottom:1px solid var(--line); margin-bottom:28px; padding:36px 0 22px;
+}
+header.doc .eyebrow{
+  font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; margin-bottom:10px;
+}
+header.doc h1{font-size:clamp(24px,4.4vw,34px); line-height:1.25; margin:0 0 14px}
+.badges{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
+.badge{
+  font-size:12.5px; padding:3px 10px; border-radius:999px;
+  border:1px solid var(--line); color:var(--muted); background:var(--accent-soft);
+  white-space:nowrap;
+}
+.badge.ok{color:var(--ok); background:var(--ok-bg); border-color:transparent}
+.badge.warn{color:var(--warn); background:var(--warn-bg); border-color:transparent}
+.badge.bad{color:var(--bad); background:var(--bad-bg); border-color:transparent}
+.badge.open{color:var(--open); background:var(--open-bg); border-color:transparent}
+nav.toc{
+  border:1px solid var(--line); border-radius:10px; padding:16px 20px;
+  margin:0 0 32px; background:var(--accent-soft);
+}
+nav.toc p{margin:0 0 8px; font-weight:700; font-size:13px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted)}
+nav.toc ul{margin:0; padding-left:20px}
+nav.toc li{margin:3px 0}
+nav.toc a{color:var(--fg); text-decoration:none}
+nav.toc a:hover{color:var(--accent); text-decoration:underline}
+nav.toc ul ul{padding-left:18px; font-size:14.5px}
+h2{font-size:22px; margin:40px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line)}
+h3{font-size:18px; margin:28px 0 8px}
+h4{font-size:16px; margin:22px 0 6px; color:var(--muted)}
+p{margin:12px 0}
+a{color:var(--accent)}
+ul,ol{padding-left:24px}
+li{margin:4px 0}
+code{
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.9em; background:var(--code-bg); padding:1.5px 5px; border-radius:4px;
+}
+pre{
+  background:var(--code-bg); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; overflow-x:auto; line-height:1.55; font-size:13.5px;
+}
+pre code{background:none; padding:0; font-size:inherit}
+blockquote{
+  margin:16px 0; padding:2px 18px; border-left:3px solid var(--accent);
+  background:var(--accent-soft); border-radius:0 8px 8px 0; color:var(--fg);
+}
+blockquote p{margin:10px 0}
+.tablewrap{overflow-x:auto; margin:16px 0; -webkit-overflow-scrolling:touch}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:420px}
+th,td{border:1px solid var(--line); padding:7px 11px; text-align:left; vertical-align:top}
+th{background:var(--accent-soft); font-weight:650; white-space:nowrap}
+tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--code-bg) 55%, transparent)}
+hr{border:0; border-top:1px solid var(--line); margin:34px 0}
+footer.doc{
+  margin-top:56px; padding-top:18px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:13.5px;
+}
+.themebtn{
+  position:fixed; right:14px; bottom:14px; z-index:10;
+  border:1px solid var(--line); background:var(--bg); color:var(--muted);
+  border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer;
+}
+.themebtn:hover{color:var(--fg)}
+@media (max-width:640px){
+  .wrap{padding:0 16px 72px}
+  header.doc{padding:26px 0 18px}
+  nav.toc{padding:14px 16px}
+}
+@media print{
+  .themebtn{display:none}
+  nav.toc{break-inside:avoid}
+  pre,table,blockquote{break-inside:avoid}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="doc">
+  <div class="eyebrow">RTL2GDS · Đề G07 · Ghi chú thực hiện</div>
+  <h1>G07 — Bộ phát hiện đỉnh có suy giảm · Ghi chú thực hiện</h1>
+  <div class="badges"><span class="badge ">G · Xử lý tín hiệu số đơn giản</span><span class="badge ">Độ khó: Trung bình</span><span class="badge ">Loại mạch: Tuần tự</span><span class="badge ok">Mô phỏng: PASS</span><span class="badge ">Tổng hợp: 83 cell · 12 FF</span><span class="badge ">Đường tới hạn: 5,02 ns</span><span class="badge warn">Physical design: CHƯA CHẠY</span></div>
+</header>
+<nav class="toc"><p>Mục lục</p><ul><li><a href="#1-bai-toan-nay-thuc-chat-la-gi">1. Bài toán này thực chất là gì</a></li><li><a href="#2-ban-chat-ky-thuat-co-che-hoat-dong">2. Bản chất kỹ thuật — cơ chế hoạt động</a></li><ul><li><a href="#2-1-hai-dong-ho-dem-nguoc">2.1 Hai đồng hồ đếm ngược</a></li><li><a href="#2-2-uu-tien-la-mot-tin-hieu-dieu-khien-sinh-muon-fanout-cao">2.2 Ưu tiên là một tín hiệu điều khiển sinh muộn, fanout cao</a></li><li><a href="#2-3-chu-ky-cau-truc-doc-duoc-tu-phan-bo-slack">2.3 Chữ ký cấu trúc đọc được từ phân bố slack</a></li><li><a href="#2-4-bao-hoa-tai-0-chi-tiet-nho-chan-loi-lon-nhat">2.4 Bão hoà tại 0 — chi tiết nhỏ chặn lỗi lớn nhất</a></li></ul><li><a href="#3-doc-ma-nguon-rtl-lam-gi-tung-dong-quan-trong">3. Đọc mã nguồn: RTL làm gì, từng dòng quan trọng</a></li><li><a href="#4-vi-sao-chon-kien-truc-nay">4. Vì sao chọn kiến trúc này</a></li><li><a href="#5-cach-thuc-hien-lo-trinh-8-buoc-tu-dac-ta-toi-gdsii">5. Cách thực hiện — lộ trình 8 bước từ đặc tả tới GDSII</a></li><li><a href="#6-so-lieu-that-da-do-duoc-va-cach-doc-chung">6. Số liệu thật đã đo được và cách đọc chúng</a></li><li><a href="#7-tra-loi-cac-cau-hoi-ky-thuat-cua-charter-muc-2">7. Trả lời các câu hỏi kỹ thuật của Charter (mục 2)</a></li><li><a href="#8-tra-loi-cau-phan-tich-rieng-charter-muc-9">8. Trả lời câu phân tích riêng (Charter mục 9)</a></li><li><a href="#9-nhung-cho-sinh-vien-hay-sai-va-cach-phat-hien">9. Những chỗ sinh viên hay sai và cách phát hiện</a></li><li><a href="#10-cau-hoi-mentor-nen-dat-khi-bao-ve">10. Câu hỏi mentor nên đặt khi bảo vệ</a></li><li><a href="#11-gioi-han-da-chung-minh-duoc-gi-chua-chung-minh-duoc-gi">11. Giới hạn: đã chứng minh được gì, chưa chứng minh được gì</a></li></ul></nav>
+<main>
+<blockquote>
+<p>⚠️ Đề này có <strong>khoảng cách RTL ↔ Charter mục 4 lớn nhất</strong> trong nhóm G: cổng <code>N</code> và cờ
+"đang suy giảm" mà Charter yêu cầu <strong>không tồn tại</strong> trong RTL. Xem cảnh báo đầu
+<code>02_SPECIFICATION/functional_spec.md</code>. Không tự sửa RTL.</p>
+</blockquote>
+<h2 id="1-bai-toan-nay-thuc-chat-la-gi">1. Bài toán này thực chất là gì</h2>
+<p>Một VU meter bám sát tín hiệu thì vô dụng — mắt người không theo kịp các đỉnh dài vài
+mili-giây. Một VU meter chỉ giữ đỉnh cũng vô dụng — sau vài giây nó đứng ở mức cao nhất từng
+đo và không bao giờ xuống. G07 là chỗ dung hoà: <strong>giữ đỉnh, rồi cho nó trôi xuống chậm</strong>.</p>
+<p>Điều này sinh ra đặc trưng kỹ thuật mà hai đề còn lại của nhóm G không có: <strong>hai hành vi
+cạnh tranh cùng muốn ghi vào một thanh ghi trong cùng một chu kỳ</strong>. "Đỉnh mới cao hơn" và
+"đã đến lúc tụt" có thể cùng đúng. Charter mục 9 hỏi thẳng về chỗ này, và toàn bộ nội dung
+kỹ thuật của đề nằm ở đó.</p>
+<p>Đề còn ẩn một câu hỏi thứ hai mà Charter mục 4 đặt ra nhưng RTL <strong>không trả lời</strong>: <code>N</code> nên
+là hằng số lúc biên dịch hay tham số nạp lúc chạy? Lựa chọn này quyết định số ô nhớ (12 hay
+~25), ngân sách chân (18 hay 27 bit), và <strong>cách kiểm chứng</strong>.</p>
+<h2 id="2-ban-chat-ky-thuat-co-che-hoat-dong">2. Bản chất kỹ thuật — cơ chế hoạt động</h2>
+<h3 id="2-1-hai-dong-ho-dem-nguoc">2.1 Hai đồng hồ đếm ngược</h3>
+<p>Cách hiểu sáng nhất: mạch có <strong>hai</strong> đồng hồ chạy song song.</p>
+<pre><code>  ĐỒNG HỒ 1 — &quot;bao giờ tụt?&quot;   : count_q, 3 bit, chu kỳ N mẫu
+  ĐỒNG HỒ 2 — &quot;bao giờ về 0?&quot;  : peak_q,  8 bit, cần 255 lần tụt
+
+  Thời gian đỉnh 255 trôi hết = 255 × N mẫu hợp lệ = 2040 mẫu khi N = 8.
+  ĐỈNH MỚI đặt lại đồng hồ 1 về 0 VÀ nạp lại đồng hồ 2 bằng sample_in.
+</code></pre>
+<p>Chỉ đồng hồ 1 là FSM (miền nhỏ, điều khiển nhánh). Đồng hồ 2 là <strong>trạng thái dữ liệu</strong> — trừ
+một ngoại lệ: giá trị <code>0</code> kích hoạt nhánh bão hoà.</p>
+<h3 id="2-2-uu-tien-la-mot-tin-hieu-dieu-khien-sinh-muon-fanout-cao">2.2 Ưu tiên là một <strong>tín hiệu điều khiển sinh muộn, fanout cao</strong></h3>
+<p>Đây là cơ chế quan trọng nhất và là nơi mọi chi phí timing tập trung.</p>
+<p>Tín hiệu <code>gt = (sample_in &gt; peak_q)</code> <strong>chỉ 1 bit</strong>, nhưng:
+- nó <strong>sinh ra muộn</strong> — phải chờ <strong>toàn bộ</strong> chuỗi borrow 8 tầng của bộ so sánh;
+- rồi nó phải <strong>lan ngang</strong> ra chân chọn của <strong>tám</strong> mux (một cho mỗi bit <code>peak</code>) cộng logic
+  đặt lại bộ đếm ⟹ <strong>fanout 9</strong>.</p>
+<p>Hai đặc tính đó cộng lại tạo ra cell đắt nhất trong cả ba đề nhóm G:</p>
+<pre><code>  _089_ (a21boi_0) :  delay 1,03 ns · fanout 9 · slew đầu ra 1,26 ns
+                      = 25,6 % toàn bộ 4,02 ns độ trễ cell của đường tới hạn
+                      nhưng chỉ 7,5072 µm² = 1,0 % diện tích thiết kế
+</code></pre>
+<p><strong>Vì sao đắt:</strong> <code>a21boi_0</code> có hậu tố <code>_0</code> — sức lái <strong>thấp nhất</strong> trong họ. Nó nạp điện cho
+9 chân đầu vào, sườn tín hiệu thoải ra (slew 1,26 ns), và cell nhận sau đó chậm theo. Đây là
+bài toán <strong>lái tải</strong>, không phải bài toán độ sâu logic — điểm này rất hay bị nhầm.</p>
+<h3 id="2-3-chu-ky-cau-truc-doc-duoc-tu-phan-bo-slack">2.3 Chữ ký cấu trúc đọc được từ phân bố slack</h3>
+<p>Tám endpoint <code>peak_out[0..7]</code> có slack <strong>bằng nhau: 4,87 ns</strong>. Không phải trùng hợp — nó nói
+rằng mọi bit cùng chờ <strong>một</strong> tín hiệu chung. So sánh:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Đề</th>
+<th>Slack theo bit đầu ra</th>
+<th>Cấu trúc suy ra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G06</td>
+<td>8,51 → 6,18 ns, <strong>giảm đơn điệu</strong></td>
+<td>dữ liệu chảy <strong>dọc</strong> chuỗi carry</td>
+</tr>
+<tr>
+<td><strong>G07</strong></td>
+<td><strong>4,87 ns, bằng nhau cả 8</strong></td>
+<td>một <strong>quyết định chung</strong> lan <strong>ngang</strong></td>
+</tr>
+<tr>
+<td>G05</td>
+<td>6,22…6,32 ns, gần bằng</td>
+<td>quyết định chung, lệch nhẹ do mux khác nhau</td>
+</tr>
+</tbody>
+</table></div>
+<p>Đây là kỹ thuật đọc STA đáng dạy: <strong>hình dạng phân bố slack cho biết kiến trúc</strong>, không cần
+mở netlist.</p>
+<h3 id="2-4-bao-hoa-tai-0-chi-tiet-nho-chan-loi-lon-nhat">2.4 Bão hoà tại 0 — chi tiết nhỏ chặn lỗi lớn nhất</h3>
+<p><code>peak_q − 1</code> khi <code>peak_q = 0</code> sẽ wrap thành <strong>255</strong> ở số học 8 bit không dấu. Với VU meter,
+đó là "im lặng ⟹ nhảy lên hết thang" — lỗi tệ nhất có thể có. RTL chặn bằng một cây NOR 8
+đầu vào và một mux.</p>
+<h2 id="3-doc-ma-nguon-rtl-lam-gi-tung-dong-quan-trong">3. Đọc mã nguồn: RTL làm gì, từng dòng quan trọng</h2>
+<p>Toàn bộ thiết kế là 55 dòng. Ba đoạn quyết định tất cả.</p>
+<p><strong>Đoạn 1 — thứ tự ưu tiên (dòng 22–36), đây LÀ đặc tả:</strong></p>
+<pre><code class="language-systemverilog">if (valid_in) begin
+    // New higher peak has priority over decay.
+    if (sample_in &gt; peak_q) begin          // ② ƯU TIÊN CAO NHẤT
+        peak_d  = sample_in;
+        count_d = '0;                      // ← đặt lại cả đồng hồ suy giảm
+    end else if (N &lt;= 1) begin …           // ③ hằng số, bị loại bỏ khi N ≥ 2
+    end else if (count_q == N-1) begin     // ④ suy giảm theo lịch
+        peak_d  = (peak_q == '0) ? '0 : peak_q - 1'b1;
+        count_d = '0;
+    end else begin
+        count_d = count_q + 1'b1;          // ⑤ chỉ đếm tiếp
+    end
+end
+</code></pre>
+<p>Chú thích tiếng Anh ngay trên nhánh ② cho thấy tác giả RTL <strong>ý thức rõ</strong> đây là quyết định
+kiến trúc, không phải thứ tự tình cờ. Nếu đảo ② và ④, khi đỉnh mới rơi đúng lúc <code>count = N−1</code>
+thì <code>peak</code> sẽ <strong>tụt</strong> thay vì <strong>nhảy lên</strong> — tức VU meter <strong>bỏ sót đỉnh</strong>, đúng thứ nó sinh
+ra để bắt.</p>
+<p><strong>Đoạn 2 — hai dòng gán mặc định (dòng 19–20), chống suy ra latch:</strong></p>
+<pre><code class="language-systemverilog">peak_d  = peak_q;
+count_d = count_q;
+</code></pre>
+<p>Nhờ chúng, <code>always_comb</code> luôn gán đủ mọi biến trên mọi đường, nên không sinh latch. Đồng thời
+chúng <strong>chính là</strong> nhánh "giữ nguyên" của mux — hiện thực thành <code>mux2_1 × 7</code> trong netlist.</p>
+<p><strong>Đoạn 3 — <code>valid_out</code> nằm NGOÀI enable (dòng 46):</strong></p>
+<pre><code class="language-systemverilog">end else begin
+    valid_out &lt;= valid_in;       // ← KHÔNG nằm trong if (valid_in)
+    if (valid_in) begin
+        peak_q   &lt;= peak_d;
+        count_q  &lt;= count_d;
+        peak_out &lt;= peak_d;
+    end
+end
+</code></pre>
+<p>Vì vậy <code>valid_out</code> là thanh ghi <strong>không có enable</strong>, trong khi 11 FF còn lại <strong>có</strong>. Bằng
+chứng ở báo cáo hold: <code>timing_report_min.txt</code> liệt kê 5 vòng giữ <code>_1xx_ → _1xx_</code>, và
+<code>_142_</code> (= <code>valid_out</code>) <strong>không</strong> có trong đó — đúng như dự đoán.</p>
+<p>Một chi tiết nữa: <code>localparam CW = (N &lt;= 1) ? 1 : $clog2(N);</code> quyết định <strong>độ rộng bộ đếm lúc
+biên dịch</strong>. Với <code>N = 8</code> thì <code>CW = 3</code>. Đây là dòng khiến netlist có <code>count_q[2:0]</code> — và là
+bằng chứng netlist được tổng hợp với <code>N = 8</code>, <strong>không</strong> phải <code>N = 2</code> như testbench.</p>
+<h2 id="4-vi-sao-chon-kien-truc-nay">4. Vì sao chọn kiến trúc này</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Quyết định</th>
+<th>Lý do</th>
+<th>Cái giá</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Suy giảm <strong>tuyến tính</strong> 1 LSB / <code>N</code> mẫu</td>
+<td>Đúng chuẩn peak-hold cho thang tuyến tính; logic rẻ nhất (bộ trừ 1)</td>
+<td>Không giống bộ nhớ tương tự (tụ xả) — nhưng "hàm mũ" <strong>ngoài phạm vi</strong></td>
+</tr>
+<tr>
+<td><strong>Đỉnh mới ưu tiên tuyệt đối</strong></td>
+<td>Chức năng cốt lõi: không được bỏ sót đỉnh ngắn</td>
+<td>1,03 ns (25,6 % đường tới hạn) cho tín hiệu <code>gt</code> fanout 9</td>
+</tr>
+<tr>
+<td>So sánh <strong>ngặt</strong> <code>&gt;</code></td>
+<td>Đơn giản hơn <code>≥</code> một chút</td>
+<td>Đầu vào hằng tạo <strong>răng cưa 1 LSB chu kỳ <code>N+1</code></strong> — xem §9</td>
+</tr>
+<tr>
+<td><strong>Bão hoà tại 0</strong></td>
+<td>Chặn wrap 0 → 255</td>
+<td>Một cây NOR 8 đầu vào</td>
+</tr>
+<tr>
+<td><code>N</code> là <strong>tham số biên dịch</strong></td>
+<td>Tiết kiệm ~8 FF giữ <code>N</code> + bộ so sánh 8 bit; giữ ngân sách chân ở 18/24</td>
+<td>❌ <strong>Lệch Charter mục 4</strong>; không đổi <code>N</code> sau chế tạo; <strong>nhân đôi công sức kiểm chứng</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-cach-thuc-hien-lo-trinh-8-buoc-tu-dac-ta-toi-gdsii">5. Cách thực hiện — lộ trình 8 bước từ đặc tả tới GDSII</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Bước</th>
+<th style="text-align: center;">Trạng thái</th>
+<th>Bằng chứng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Suy bảng hành vi và <strong>bảng ưu tiên</strong> từ Charter mục 1, 8, 9</td>
+<td style="text-align: center;">✅</td>
+<td><code>functional_spec.md</code> §3</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Viết mô hình chuẩn Python độc lập</td>
+<td style="text-align: center;">✅ <strong>PASS</strong> (10 test, <code>N</code> từ 1 tới 16)</td>
+<td><code>python_reference_run.log</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Viết RTL, chốt thứ tự ưu tiên bằng <code>if</code>/<code>else if</code></td>
+<td style="text-align: center;">✅</td>
+<td><code>g07_peak_decay.sv</code>, 55 dòng</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Viết testbench tự kiểm</td>
+<td style="text-align: center;">⚠️ <strong>PASS nhưng với <code>N = 2</code></strong> ≠ cấu hình tổng hợp</td>
+<td><code>simulation.log</code>, <code>$finish @ 136</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tổng hợp ra standard cell sky130 (<strong><code>N = 8</code></strong>)</td>
+<td style="text-align: center;">✅</td>
+<td>83 cell · 12 FF · 754,4736 µm²</td>
+</tr>
+<tr>
+<td>6</td>
+<td>STA với SDC (10 ns, IO delay 1 ns)</td>
+<td style="text-align: center;">✅</td>
+<td>5,02 ns · slack 4,87 ns · WNS/TNS 0,00</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Ước lượng công suất</td>
+<td style="text-align: center;">✅</td>
+<td>7,43e-05 W (tuần tự 73,2 %)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Place &amp; route → DRC/LVS → GDSII</td>
+<td style="text-align: center;">⬜ <strong>chưa chạy</strong></td>
+<td>cần LibreLane + PDK sky130A</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Hai việc còn thiếu nằm giữa 4 và 5</strong>, và chúng là điểm yếu lớn nhất của hồ sơ: (a) đồng bộ
+cấu hình <code>N</code> giữa mô phỏng và tổng hợp; (b) bổ sung ca <strong>cạnh tranh thật</strong> (đỉnh mới đúng lúc
+<code>count = N−1</code>) — ca này chỉ có ở golden model.</p>
+<h2 id="6-so-lieu-that-da-do-duoc-va-cach-doc-chung">6. Số liệu thật đã đo được và cách đọc chúng</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Số</th>
+<th style="text-align: right;">Giá trị</th>
+<th><strong>Chứng minh</strong> điều gì</th>
+<th><strong>KHÔNG</strong> chứng minh điều gì</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Số cell</td>
+<td style="text-align: right;">83</td>
+<td>Tổng hợp được; <strong>dưới</strong> ước lượng Charter (200–290) vì không có thanh ghi giữ <code>N</code></td>
+<td>Không nói gì về chức năng</td>
+</tr>
+<tr>
+<td>Flip-flop</td>
+<td style="text-align: right;"><strong>12</strong></td>
+<td>8 (<code>peak_out</code>, đã hợp nhất <code>peak_q</code>) + 3 (<code>count_q</code>) + 1 (<code>valid_out</code>) ⟹ <strong>có bộ đếm</strong>, không phạm rủi ro Charter mục 10</td>
+<td><strong>Không</strong> khớp dự kiến Charter 24–25 — vì <code>N</code> là tham số, không phải cổng. Và con số này <strong>chỉ đúng cho <code>N = 8</code></strong> (với <code>N = 2</code> sẽ là 10)</td>
+</tr>
+<tr>
+<td>Diện tích</td>
+<td style="text-align: right;">754,4736 µm²</td>
+<td>Vừa ô 1×1</td>
+<td>Chưa gồm dây, chưa gồm lớp vỏ <code>tt_um_*</code></td>
+</tr>
+<tr>
+<td>Thanh ghi / tổ hợp</td>
+<td style="text-align: right;">240,23 µm² (31,8 %) / 514,24 µm² (68,2 %)</td>
+<td>Tỷ lệ tổ hợp <strong>cao nhất</strong> trong ba đề — vì có <strong>hai</strong> khối tính (so sánh + trừ) chứ không phải một</td>
+<td>Tính từ <code>dfxtp_1 = 20,0192 µm²</code> trong Liberty</td>
+</tr>
+<tr>
+<td>Đường tới hạn</td>
+<td style="text-align: right;"><code>sample_in[0] → peak_out[0]</code>, 5,02 ns</td>
+<td>Nút thắt gồm <strong>hai</strong> phần: chuỗi so sánh <strong>2,62 ns (65,2 %)</strong> và tầng lan quyết định <strong>1,30 ns (32,3 %)</strong></td>
+<td><strong>Không</strong> nghĩa là "chạy được ở 199 MHz". Gồm 1,00 ns IO delay <strong>giả định</strong>, chưa có dây, 1 góc PVT, và là của <code>N = 8</code></td>
+</tr>
+<tr>
+<td>Slack setup</td>
+<td style="text-align: right;"><strong>4,87 ns</strong> — chặt nhất trong ba đề</td>
+<td>Vẫn còn biên rộng với chu kỳ giả định 10 ns</td>
+<td>Sẽ co lại sau P&amp;R và ở góc <code>ss</code></td>
+</tr>
+<tr>
+<td>Slack 8 bit <code>peak_out</code></td>
+<td style="text-align: right;"><strong>bằng nhau</strong></td>
+<td>Chữ ký của "một quyết định chung lan ngang"</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Slack hold</td>
+<td style="text-align: right;">0,50 ns (<code>count_q[1]</code>)</td>
+<td>Không vi phạm hold sau tổng hợp</td>
+<td><strong>Clock lý tưởng, skew = 0</strong></td>
+</tr>
+<tr>
+<td>Công suất</td>
+<td style="text-align: right;">7,43e-05 W (tuần tự 73,2 %)</td>
+<td>FF vẫn là nhóm tốn nhất</td>
+<td><strong>Ước lượng</strong> với hoạt động mặc định. VU meter thật phần lớn thời gian "im lặng" ⟹ có thể thấp hơn nhiều</td>
+</tr>
+<tr>
+<td>Mô phỏng RTL</td>
+<td style="text-align: right;">PASS, <code>$finish @ 136</code></td>
+<td>Chạy hết testbench, không assertion nào vi phạm; phủ 5 nhánh hành vi</td>
+<td><strong>Chỉ đúng cho <code>N = 2</code></strong>, mạch <strong>chưa bao giờ được tổng hợp</strong>. Thiếu ca cạnh tranh, ca <code>N</code> lớn, ca <code>N = 1</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7-tra-loi-cac-cau-hoi-ky-thuat-cua-charter-muc-2">7. Trả lời các câu hỏi kỹ thuật của Charter (mục 2)</h2>
+<p><strong>(1) Bộ đếm suy giảm <code>N</code> chu kỳ chiếm bao nhiêu ô nhớ so với thanh ghi giữ đỉnh?</strong></p>
+<p>Đo được (<code>N = 8</code>): bộ đếm <strong>3 FF</strong> = 60,06 µm²; thanh ghi đỉnh <strong>8 FF</strong> = 160,15 µm². Tỷ lệ
+<strong>3 : 8</strong>, tức bộ đếm chiếm <strong>27 %</strong> số ô nhớ dùng cho hai khối này, hay <strong>25 %</strong> tổng 12 FF.</p>
+<p>Điểm quan trọng: con số 3 có được vì <code>CW = $clog2(N)</code> <strong>biết <code>N</code> lúc biên dịch</strong>. Nếu <code>N</code> là
+cổng vào như Charter mục 4 yêu cầu, bộ đếm phải rộng <strong>8 bit</strong> và còn cần <strong>8 FF</strong> nữa để giữ
+<code>N</code> ⟹ tỷ lệ thành <strong>16 : 8</strong>, tức bộ đếm <strong>gấp đôi</strong> thanh ghi đỉnh. Đây chính là cách
+Charter mục 10 ước lượng ra "24–25 ô nhớ".</p>
+<p><strong>(2) Đỉnh mới thấp hơn đỉnh đang giữ — mạch phản ứng thế nào, và vì sao không cập nhật ngay?</strong></p>
+<p>Mạch <strong>không làm gì với <code>peak</code></strong> — nó chỉ tăng <code>count_q</code>. Bằng chứng waveform: cạnh lên 4
+(<code>t = 35 ns</code>), <code>sample_in = 1</code> nhưng <code>peak_out</code> <strong>giữ 10</strong>; chỉ <code>count_q</code> đi 0 → 1
+(<code>timing_diagram.md</code> §3).</p>
+<p>Vì sao không cập nhật ngay: nếu <code>peak</code> bám mẫu thấp, nó không còn là "peak hold" mà thành
+"bám tức thời" — và các đỉnh ngắn sẽ biến mất trước khi mắt kịp thấy. Đỉnh <strong>chỉ được</strong> giảm
+theo lịch trình <code>N</code>, mỗi lần đúng <strong>1 LSB</strong> — đó là thứ làm chuyển động của VU meter mượt và
+đọc được.</p>
+<p><strong>(3) <code>N</code> nhỏ và <code>N</code> lớn cho hành vi khác nhau ra sao trên waveform?</strong></p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>N</code> nhỏ (= 2, cấu hình testbench)</th>
+<th><code>N</code> lớn (= 8, cấu hình tổng hợp)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nhịp tụt</td>
+<td>1 LSB mỗi <strong>2</strong> mẫu</td>
+<td>1 LSB mỗi <strong>8</strong> mẫu</td>
+</tr>
+<tr>
+<td>Từ 255 về 0</td>
+<td>510 mẫu</td>
+<td><strong>2040</strong> mẫu</td>
+</tr>
+<tr>
+<td>Bộ đếm</td>
+<td><code>CW = 1</code> ⟹ 1 FF</td>
+<td><code>CW = 3</code> ⟹ 3 FF</td>
+</tr>
+<tr>
+<td>Tổng FF</td>
+<td><strong>10</strong></td>
+<td><strong>12</strong></td>
+</tr>
+<tr>
+<td>Cảm nhận</td>
+<td>đỉnh trôi nhanh, meter "nhạy"</td>
+<td>đỉnh treo lâu, dễ đọc</td>
+</tr>
+</tbody>
+</table></div>
+<p>Trên waveform (<code>timing_diagram.md</code> §3, <code>N = 2</code>): đỉnh 10 đặt ở cạnh 3, tụt còn 9 ở <strong>cạnh 5</strong>
+— chỉ sau <strong>2</strong> mẫu. Với <code>N = 8</code>, cùng chuỗi đó sẽ phải chờ tới <strong>cạnh 11</strong>.</p>
+<blockquote>
+<p>⚠️ <strong>Nhưng đây là câu trả lời chưa khép kín:</strong> RTL <strong>chỉ được mô phỏng với <code>N = 2</code></strong>. Hành
+vi <code>N = 8</code> suy ra từ mã và từ golden model, <strong>không</strong> từ mô phỏng RTL. Charter mục 8 bắt
+buộc cả "N nhỏ <strong>và</strong> N lớn" — yêu cầu này <strong>CHƯA THOẢ</strong> ở mức RTL. Xem <code>corner_cases.md</code> §5.</p>
+</blockquote>
+<h2 id="8-tra-loi-cau-phan-tich-rieng-charter-muc-9">8. Trả lời câu phân tích riêng (Charter mục 9)</h2>
+<blockquote>
+<p><em>"Thiết kế có hai hành vi cạnh tranh: cập nhật đỉnh và suy giảm. Nêu rõ cách mình xử lý khi
+cả hai xảy ra cùng chu kỳ, và chỉ ra phần logic quyết định thứ tự ưu tiên."</em></p>
+</blockquote>
+<p><strong>(a) Xử lý khi cả hai xảy ra cùng chu kỳ:</strong> <strong>cập nhật đỉnh thắng tuyệt đối.</strong> Cơ chế là thứ
+tự <code>if</code> / <code>else if</code> (RTL dòng 24 nằm <strong>trước</strong> dòng 30), mà trình tổng hợp dựng thành nhánh
+ưu tiên cao hơn của cây mux. Khi <code>gt = 1</code>, nhánh suy giảm <strong>không bao giờ</strong> được chọn, bất kể
+<code>count_q</code> bằng bao nhiêu. Bộ đếm cũng bị ép về 0 trong cùng nhịp, nên đồng hồ suy giảm khởi
+động lại từ đầu — đúng ngữ nghĩa "đỉnh mới thì tính lại thời gian giữ".</p>
+<p><strong>(b) Phần logic quyết định ưu tiên — chỉ đích danh bằng số:</strong></p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Hạng mục</th>
+<th>Giá trị</th>
+<th>Nguồn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Instance</td>
+<td><strong><code>_089_</code></strong></td>
+<td><code>timing_report_max.txt</code></td>
+</tr>
+<tr>
+<td>Cell</td>
+<td><code>sky130_fd_sc_hd__a21boi_0</code></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Đi tới</td>
+<td>chân <strong><code>S</code></strong> (select) của <code>_097_ (mux2i_1)</code> + 8 tải khác</td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Fanout</td>
+<td><strong>9</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Slew đầu ra</td>
+<td><strong>1,26 ns</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>Delay</td>
+<td><strong>1,03 ns</strong></td>
+<td>như trên</td>
+</tr>
+<tr>
+<td>% đường tới hạn</td>
+<td><strong>25,6 %</strong> của 4,02 ns độ trễ cell</td>
+<td>tính</td>
+</tr>
+<tr>
+<td>Diện tích cell</td>
+<td><strong>7,5072 µm²</strong></td>
+<td>Liberty</td>
+</tr>
+<tr>
+<td>% diện tích thiết kế</td>
+<td><strong>1,0 %</strong></td>
+<td>tính</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Câu kết bằng số:</strong> <em>logic quyết định ưu tiên chiếm </em><em>1,0 % diện tích</em><em> nhưng </em><em>25,6 % đường
+tới hạn</em><em>.</em> Nguyên nhân là <strong>lái tải</strong>: một cell sức lái thấp nhất (<code>_0</code>) phải lái 9 chân.
+Cộng thêm mux nó điều khiển, tầng "lan quyết định" tốn <strong>1,30 ns = 32,3 %</strong> toàn đường — đó
+chính là cái giá của việc có hai hành vi cạnh tranh, đo được bằng ns.</p>
+<p><strong>(c) Khoảng trống cần nói thẳng:</strong> ca <strong>cạnh tranh thật</strong> (đỉnh mới <strong>đúng lúc</strong>
+<code>count = N−1</code>) <strong>chưa được mô phỏng trên RTL</strong>. Ca ở testbench dòng 41 rơi vào <code>count_q = 0</code>.
+Golden model có (<code>test_new_peak_priority_on_decay_boundary()</code>). Xem <code>corner_cases.md</code> CC-13.</p>
+<h2 id="9-nhung-cho-sinh-vien-hay-sai-va-cach-phat-hien">9. Những chỗ sinh viên hay sai và cách phát hiện</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Sai lầm</th>
+<th>Hậu quả</th>
+<th><strong>Phát hiện bằng bằng chứng nào</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Quên bộ đếm</strong> — tụt mỗi chu kỳ</td>
+<td>Đỉnh tụt ngay, VU meter vô dụng. Đây là rủi ro Charter mục 10 nêu tên</td>
+<td>Waveform: với <code>N = 2</code>, <code>peak</code> phải giữ 10 ở cạnh 4 rồi mới còn 9 ở cạnh 5. Nếu tụt ngay cạnh 4 ⟹ dính lỗi. Và netlist phải có <code>count_q</code> (3 FF)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Đảo thứ tự ưu tiên</strong> (suy giảm trước đỉnh mới)</td>
+<td>Đỉnh mới bị nuốt khi rơi đúng lúc tụt ⟹ <strong>bỏ sót đỉnh</strong></td>
+<td>Ca cạnh tranh: <code>N = 2</code>, chuỗi <code>[10, 1, 20]</code>. Golden <code>test_new_peak_priority_on_decay_boundary()</code> bắt được. <strong>Testbench RTL thì không</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Quên bão hoà tại 0</strong></td>
+<td><code>peak = 0</code> wrap thành 255 ⟹ meter nhảy hết thang khi im lặng</td>
+<td>Ca <code>send(0,0)</code> hai lần liên tiếp sau khi <code>peak</code> về 0. TB dòng 49–50 có, nhưng chưa chạy tới lần tụt <strong>thứ hai</strong> ở mức 0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Dùng <code>≥</code> thay <code>&gt;</code> khi so sánh</td>
+<td>Mẫu bằng đỉnh sẽ đặt lại bộ đếm ⟹ đầu vào hằng <strong>không bao giờ tụt</strong> ⟹ thành peak-hold vĩnh viễn</td>
+<td>Ca đầu vào hằng dài (<code>N + 5</code> mẫu bằng nhau). Với <code>&gt;</code> sẽ thấy răng cưa chu kỳ <code>N+1</code>; với <code>≥</code> sẽ thấy đường phẳng. <strong>Ca này chưa có ở đâu</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tưởng suy giảm theo <strong>thời gian</strong></td>
+<td>Khi nguồn mẫu dừng, đỉnh <strong>treo</strong> thay vì trôi</td>
+<td>Ca khe <code>valid_in</code> (TB dòng 53–55): <code>count_q</code> <strong>đóng băng</strong> ở 1, không nhích. Đây là bằng chứng "đếm theo mẫu"</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Mô phỏng với <code>N</code> này, tổng hợp với <code>N</code> khác</td>
+<td>Hai kết luận nói về hai mạch khác nhau</td>
+<td><strong>Đã xảy ra thật</strong>: TB dùng <code>N = 2</code>, netlist có <code>count_q[2:0]</code> = 3 bit = <code>$clog2(8)</code>. Đếm số FF trong netlist là cách phát hiện</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Tưởng đếm được 20 FF từ RTL</td>
+<td>Nhầm khi đối chiếu Charter mục 10</td>
+<td><code>synth_stat.txt</code> cho <strong>12</strong>. Yosys hợp nhất <code>peak_q</code> vào <code>peak_out</code> (cùng <code>D</code>, enable, reset) — giống <code>y_q</code>/<code>y</code> ở G06, <strong>khác</strong> <code>min_q</code>/<code>min_out</code> ở G05 (enable khác nhau)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Tưởng bộ đếm nằm trên đường tới hạn</td>
+<td>Tối ưu nhầm chỗ</td>
+<td>STA: <code>count_q[0]</code> có slack <strong>6,01 ns</strong>, <code>peak_out[*]</code> chỉ <strong>4,87 ns</strong>. Bộ đếm <strong>rộng rãi</strong> về timing</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Tưởng <code>lpflow_isobufsrc_1</code> nghĩa là thiết kế có power gating</td>
+<td>Hiểu sai netlist</td>
+<td>Cell cách ly nguồn bị <code>abc</code> dùng làm <strong>cổng logic thường</strong> (chân <code>SLEEP</code> như enable) vì rẻ. Xuất hiện 8 lần trong netlist, 1 lần trên đường tới hạn</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Kết luận "<code>N</code> không là luỹ thừa của 2 vẫn an toàn"</td>
+<td>Bỏ sót trạng thái bất hợp lệ</td>
+<td>Với <code>N = 5</code>: <code>CW = 3</code> nhưng chỉ dùng 0…4 ⟹ <strong>3 trạng thái bất hợp lệ</strong>. Máy tự phục hồi sau ≤ 3 mẫu nhờ tràn, nhưng nhịp suy giảm bị lệch. Xem <code>fsm.md</code> §5</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="10-cau-hoi-mentor-nen-dat-khi-bao-ve">10. Câu hỏi mentor nên đặt khi bảo vệ</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Câu hỏi</th>
+<th>Đáp án mong đợi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Đỉnh mới và lúc tụt trùng nhau — ai thắng, và phần cứng nào quyết định?</td>
+<td>Đỉnh mới thắng. Cơ chế là thứ tự <code>if</code>/<code>else if</code>; phần cứng là cell <strong><code>_089_</code> (<code>a21boi_0</code>)</strong> lái chân <strong><code>S</code></strong> của 8 mux</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Logic ưu tiên đó tốn bao nhiêu?</td>
+<td><strong>1,0 % diện tích</strong> (7,5072 µm²) nhưng <strong>25,6 % đường tới hạn</strong> (1,03 ns / 4,02 ns). Vì fanout 9 và sức lái thấp ⟹ slew 1,26 ns</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Netlist có 12 FF nhưng Charter nói 24–25. Vi phạm đề chứ?</td>
+<td>Không vi phạm chức năng, nhưng <strong>lệch Charter mục 4</strong>: <code>N</code> là tham số biên dịch nên không cần 8 FF giữ <code>N</code>, và bộ đếm chỉ <code>$clog2(8) = 3</code> bit thay vì 8</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Testbench dùng <code>N</code> bằng mấy? Netlist dùng <code>N</code> bằng mấy?</td>
+<td><strong>2</strong> và <strong>8</strong>. Bằng chứng: netlist có <code>count_q[2:0]</code> = 3 bit = <code>$clog2(8)</code>. Đây là khoảng trống kiểm chứng phải nói rõ</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tám bit <code>peak_out</code> có slack bằng nhau (4,87 ns). Điều đó nói lên cấu trúc gì?</td>
+<td>Mọi bit chờ <strong>cùng một</strong> tín hiệu quyết định lan <strong>ngang</strong>. Tương phản với G06, nơi slack giảm đơn điệu vì dữ liệu chảy <strong>dọc</strong> chuỗi carry</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Nếu bỏ biểu thức <code>(peak_q == '0) ? '0 : …</code> thì sao?</td>
+<td><code>peak = 0</code> sẽ wrap thành <strong>255</strong> ⟹ VU meter nhảy hết thang khi im lặng. Lỗi tệ nhất có thể của loại mạch này</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Nguồn mẫu dừng 10 giây — đỉnh có trôi về 0 không?</td>
+<td><strong>Không.</strong> Bộ đếm chỉ nhích khi <code>valid_in = 1</code> ⟹ suy giảm tính theo <strong>số mẫu</strong>, không theo <strong>thời gian</strong>. Bằng chứng: TB dòng 53–55, <code>count_q</code> đóng băng ở 1</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Đầu vào là hằng số bằng đúng đỉnh — waveform ra sao?</td>
+<td><strong>Răng cưa 1 LSB chu kỳ <code>N+1</code></strong>: giữ <code>N−1</code> mẫu, tụt 1, rồi mẫu kế lớn hơn ⟹ nhảy lại lên. Vì so sánh là <code>&gt;</code> ngặt. <strong>Chưa ca nào kiểm điều này</strong></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Vì sao bộ đếm <strong>không</strong> nằm trên đường tới hạn dù nó cũng nhận <code>gt</code>?</td>
+<td>Đường tới <code>peak_out</code> còn qua mux 8 bit + buffer (0,33 ns); đường tới <code>count_q</code> chỉ cần ép về 0. Slack: 4,87 so với 5,03 và 6,01 ns</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Đỉnh 255 mất bao lâu để về 0?</td>
+<td><code>255 × N</code> mẫu hợp lệ = <strong>2040</strong> mẫu với <code>N = 8</code>, 510 mẫu với <code>N = 2</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Hồ sơ đã thoả Charter mục 4 chưa?</td>
+<td><strong>Chưa</strong> — thiếu <strong>hai cổng</strong>: <code>uio_in[7:0] = N</code> và <code>uio_out[0] = "đang suy giảm"</code>. Vì thiếu chúng mà ngân sách chân mới "đủ" (18/24); nếu bổ sung sẽ là 27 bit, <strong>vượt 3 chân</strong></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Nếu <code>N = 5</code> thì bộ đếm có trạng thái bất hợp lệ không?</td>
+<td><strong>Có</strong> — <code>CW = 3</code> biểu diễn 0…7 nhưng chỉ dùng 0…4. Máy <strong>tự phục hồi</strong> sau ≤ 3 mẫu nhờ bộ đếm tràn về 0, nhưng nhịp suy giảm bị lệch. Với <code>N = 8</code> thì phủ kín, an toàn tuyệt đối</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="11-gioi-han-da-chung-minh-duoc-gi-chua-chung-minh-duoc-gi">11. Giới hạn: đã chứng minh được gì, chưa chứng minh được gì</h2>
+<p><strong>Đã chứng minh:</strong>
+- Thiết kế <strong>có bộ đếm suy giảm</strong> thật (3 FF <code>count_q</code>), <strong>không</strong> phạm rủi ro Charter mục 10.
+- <strong>Ưu tiên đỉnh mới</strong> được hiện thực đúng, và đã chỉ đích danh phần cứng (<code>_089_</code>) kèm số
+  liệu timing và diện tích — trả lời Charter mục 9 bằng số.
+- <strong>Bão hoà tại 0</strong> hoạt động — mô phỏng xác nhận <code>peak</code> xuống 0 rồi giữ 0.
+- Mô phỏng RTL chạy hết testbench (cấu hình <code>N = 2</code>), phủ 5 nhánh hành vi và một lần reset
+  giữa dòng.
+- Số liệu cấu trúc và thời gian thật ở mức <strong>sau tổng hợp</strong> cho cấu hình <code>N = 8</code>: 83 cell ·
+  12 FF · 754,4736 µm² · 5,02 ns · slack 4,87 ns · 7,43e-05 W.
+- Chữ ký cấu trúc "slack bằng nhau trên 8 bit" xác nhận kiến trúc "một quyết định chung lan
+  ngang".</p>
+<p><strong>Chưa chứng minh:</strong>
+- <strong>Mạch đã tổng hợp (<code>N = 8</code>) chưa bao giờ được mô phỏng</strong>; mạch đã mô phỏng (<code>N = 2</code>) chưa
+  bao giờ được tổng hợp. Đây là khoảng trống nghiêm trọng nhất.
+- Ca <strong>cạnh tranh thật</strong> (đỉnh mới đúng lúc <code>count = N−1</code>) — chỉ có ở golden model.
+- Charter mục 8 yêu cầu cả "<code>N</code> nhỏ <strong>và</strong> <code>N</code> lớn" — mới phủ được <code>N = 2</code> ở mức RTL.
+- Nhánh <code>N ≤ 1</code> trong RTL <strong>chưa bao giờ được mô phỏng</strong>.
+- Hành vi răng cưa với đầu vào hằng — suy ra từ mã, chưa ca nào kiểm.
+- Netlist tương đương chức năng với RTL — chưa mô phỏng gate-level.
+- Độ trễ thật sau routing; biên an toàn qua các góc PVT; công suất từ VCD thật.
+- <strong>Tuân thủ Charter mục 4</strong> — thiếu cổng <code>N</code>, thiếu cờ "đang suy giảm", chưa có lớp vỏ
+  <code>tt_um_*</code>, và bài toán "vượt ngân sách chân" bị <strong>né</strong> chứ không <strong>giải</strong>.</p>
+<p><strong>Không được khẳng định</strong> (Charter mục 3): sign-off, tape-out, chế tạo, kiểm tra sau chế tạo,
+"chạy được ở XXX MHz", "đã tối ưu netlist", "đã kiểm chứng đầy đủ mọi giá trị <code>N</code>".</p>
+<hr>
+<p><em>Phiên bản: v1.0 · Ngày: 2026-09-24</em></p>
+</main>
+<footer class="doc">
+  Tài liệu sinh từ <code>implementation-notes_G07.md</code>.
+  Mọi số liệu đều kèm công cụ, phiên bản và lệnh tái lập trong
+  <code>07_TRACEABILITY/evidence_index.md</code>.
+</footer>
+</div>
+<script>
+(function(){
+  var b=document.createElement('button');
+  b.className='themebtn'; b.type='button';
+  function lbl(){var t=document.documentElement.getAttribute('data-theme');
+    return t==='dark'?'Nen sang':(t==='light'?'Nen toi':'Doi nen');}
+  b.textContent=lbl();
+  try{var s=localStorage.getItem('rtl2gds-theme'); if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}
+  b.textContent=lbl();
+  b.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var mq=window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next=cur?(cur==='dark'?'light':'dark'):(mq?'light':'dark');
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('rtl2gds-theme',next);}catch(e){}
+    b.textContent=lbl();
+  });
+  document.body.appendChild(b);
+})();
+</script>
+</body>
+</html>

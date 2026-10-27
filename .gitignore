@@ -1,0 +1,16 @@
+# LibreLane intermediate files
+**/runs/
+**/__pycache__/
+*.pyc
+
+# Python environment
+.venv/
+venv/
+
+# Temporary simulation files
+*.vvp
+*.vcd
+*.fst
+
+# Local logs
+*.log
