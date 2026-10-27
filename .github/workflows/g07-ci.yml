@@ -1,0 +1,46 @@
+name: G07 RTL Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  rtl-verification:
+    name: RTL Simulation and Golden Model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Show tool versions
+        run: |
+          iverilog -V | head -n 1
+          python3 --version
+
+      - name: Run RTL simulation
+        run: |
+          bash 04_IMPLEMENTATION/scripts/01_run_sim.sh
+
+      - name: Run Python golden model
+        run: |
+          python3 05_VERIFICATION/golden_model/reference_model.py
+
+      - name: Upload simulation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g07-simulation-results
+          path: |
+            05_VERIFICATION/simulation.log
+            05_VERIFICATION/tool_versions.txt
+            05_VERIFICATION/waveforms/
+          if-no-files-found: warn
