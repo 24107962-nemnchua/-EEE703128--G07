@@ -30,6 +30,10 @@ jobs:
         run: |
           bash 04_IMPLEMENTATION/scripts/01_run_sim.sh
 
+      - name: Run G07 V2 runtime wrapper test
+        run: |
+          bash 04_IMPLEMENTATION/scripts/05_run_runtime_tb.sh
+
       - name: Run Python golden model
         run: |
           python3 05_VERIFICATION/golden_model/reference_model.py
